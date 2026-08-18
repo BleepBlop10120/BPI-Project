@@ -1,0 +1,190 @@
+classDiagram
+    class Main {
+        +main(String[] args)
+    }
+
+    class Menu {
+        -AccountService accountService
+        -TransactionService transactionService
+        -AuthService authService
+        -UserSession userSession
+        -Scanner scanner
+        +Menu()
+        +startMenu()
+        -handleLoginGate()
+        -displayMenu()
+    }
+
+    class AccountService {
+        -AccountDAO accountDAO
+        -AuthDAO authDAO
+        -PasswordHasher passwordHasher
+        -Scanner scanner
+        -UserSession userSession
+        +createAccount()
+        +balanceInquiry()
+        +listAccounts()
+        +findAccountOrThrow(String) Account
+        +generateAccountNumber() String
+    }
+
+    class AuthService {
+        -AuthDAO authDAO
+        -AccountService accountService
+        -PasswordHasher passwordHasher
+        -Scanner scanner
+        -UserSession userSession
+        +login() Account
+        -authenticate(String,String) Account
+    }
+
+    class TransactionService {
+        -AccountDAO accountDAO
+        -TransactionDAO transactionDAO
+        -AccountService accountService
+        -UserSession userSession
+        +deposit()
+        +withdraw()
+        +transfer()
+        +viewTransactionHistory()
+        +miniStatement()
+    }
+
+    class UserSession {
+        -Account currentAccount
+        +login(Account)
+        +getCurrentAccount() Account
+        +isLoggedIn() boolean
+        +logout()
+    }
+
+    class Account {
+        -Long accountID
+        -String accountNumber
+        -String accountName
+        -BigDecimal balance
+        -LocalDateTime createdAt
+        -LocalDateTime updatedAt
+    }
+
+    class AccountCredential {
+        -Long credentialId
+        -String accountNumber
+        -String username
+        -String passwordHash
+        -String salt
+    }
+
+    class Transaction {
+        -long transactionId
+        -String accountNumber
+        -TransactionType transactionType
+        -BigDecimal amount
+        -BigDecimal balanceAfter
+        -String referenceNumber
+        -String remarks
+        -LocalDateTime createdAt
+    }
+
+    class TransactionType {
+        <<enumeration>>
+        DEPOSIT
+        WITHDRAW
+        TRANSFER_OUT
+        TRANSFER_IN
+        +displayName() String
+    }
+
+    class AccountDAO {
+        <<interface>>
+        +createAccount(Account)
+        +findByAccountNumber(String)
+        +findAll()
+        +updateBalance(String,BigDecimal)
+        +updateBalance(Connection,String,BigDecimal)
+    }
+
+    class AuthDAO {
+        <<interface>>
+        +findByUsername(String)
+        +save(AccountCredential)
+        +existsByAccountNumber(String)
+    }
+
+    class TransactionDAO {
+        <<interface>>
+        +save(Transaction)
+        +save(Connection,Transaction)
+        +findByAccountNumber(String)
+        +findRecentTransactions(String,int)
+    }
+
+    class AccountDAOImpl
+    class AuthDAOImpl
+    class TransactionDAOImpl
+
+    class PasswordHasher {
+        <<interface>>
+        +generateSalt() String
+        +hash(String,String) String
+        +verify(String,String,String) boolean
+    }
+
+    class Pbkdf2PasswordHasher {
+        -int ITERATIONS
+        -int KEY_LENGTH_BITS
+        +generateSalt() String
+        +hash(String,String) String
+        +verify(String,String,String) boolean
+    }
+
+    class ReferenceNumberGenerator {
+        <<utility>>
+        +generate() String
+    }
+
+    class DBConnection {
+        <<utility>>
+        +getConnection() Connection
+    }
+
+    class PropertyLoader {
+        <<utility>>
+        +get(String) String
+    }
+
+    Main --> Menu
+    Menu --> AccountService
+    Menu --> AuthService
+    Menu --> TransactionService
+    Menu --> UserSession
+
+    AccountService --> AccountDAO
+    AccountService --> AuthDAO
+    AccountService --> PasswordHasher
+    AccountService --> UserSession
+    AccountService --> Account
+    AccountService --> AccountCredential
+
+    AuthService --> AuthDAO
+    AuthService --> AccountService
+    AuthService --> PasswordHasher
+    AuthService --> UserSession
+    AuthService --> Account
+
+    TransactionService --> AccountDAO
+    TransactionService --> TransactionDAO
+    TransactionService --> AccountService
+    TransactionService --> UserSession
+    TransactionService --> Transaction
+    TransactionService --> ReferenceNumberGenerator
+
+    AccountDAOImpl ..|> AccountDAO
+    AuthDAOImpl ..|> AuthDAO
+    TransactionDAOImpl ..|> TransactionDAO
+
+    Pbkdf2PasswordHasher ..|> PasswordHasher
+
+    Transaction --> TransactionType
+    UserSession --> Account
+    AccountCredential --> Account
